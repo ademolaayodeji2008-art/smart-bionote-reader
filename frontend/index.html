@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Smart Bionote Reader is an educational platform that helps students learn through reading, listening, interactive quizzes, and teacher-created learning materials." />
+    <meta name="theme-color" content="#2563EB" />
+    <meta name="background-color" content="#F8FAFC" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Bionote Reader" />
+    <title>Smart Bionote Reader — Read. Listen. Learn.</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("sbr-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var isDark = stored === "dark" || (stored !== "light" && prefersDark);
+          document.documentElement.classList.toggle("dark", isDark);
+        } catch (error) {
+          /* localStorage unavailable — fall back to light theme */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

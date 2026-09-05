@@ -1,0 +1,42 @@
+import { Router } from "express";
+import healthRoutes from "./health.routes.js";
+import authRoutes from "./authRoutes.js";
+import studentRoutes from "./studentRoutes.js";
+import teacherRoutes from "./teacherRoutes.js";
+import subjectRoutes from "./subjectRoutes.js";
+import classRoutes from "./classRoutes.js";
+import enrollmentRoutes from "./enrollmentRoutes.js";
+import lessonRoutes from "./lessonRoutes.js";
+import bookmarkRoutes from "./bookmarkRoutes.js";
+import progressRoutes from "./progressRoutes.js";
+import questionRoutes from "./questionRoutes.js";
+import quizRoutes from "./quizRoutes.js";
+import leaderboardRoutes from "./leaderboardRoutes.js";
+import adminRoutes from "./adminRoutes.js";
+import subscriptionRoutes from "./subscriptionRoutes.js";
+import paymentRoutes from "./paymentRoutes.js";
+import downloadRoutes from "./downloadRoutes.js";
+import invitationRoutes from "./invitationRoutes.js";
+
+const router = Router();
+
+router.use("/health", healthRoutes);
+router.use("/auth", authRoutes);
+router.use("/students", studentRoutes);
+router.use("/teachers", teacherRoutes);
+router.use("/subjects", subjectRoutes);
+router.use("/classes", classRoutes);
+router.use("/enrollments", enrollmentRoutes);
+router.use("/lessons", lessonRoutes);
+router.use("/lessons/:lessonId/questions", questionRoutes);
+router.use("/lessons/:lessonId/quiz", quizRoutes);
+router.use("/bookmarks", bookmarkRoutes);
+router.use("/progress", progressRoutes);
+router.use("/leaderboard", leaderboardRoutes);
+router.use("/admin", adminRoutes);
+router.use("/subscriptions", subscriptionRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/downloads", downloadRoutes);
+router.use("/invitations", invitationRoutes);
+
+export default router;
