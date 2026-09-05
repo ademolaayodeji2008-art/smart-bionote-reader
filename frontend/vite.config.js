@@ -46,7 +46,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-        navigateFallback: "/offline.html",
+        // Only show offline.html when there is genuinely no network —
+        // do NOT use it as a fallback for slow responses (Render cold starts)
+        navigateFallback: null,
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
@@ -54,7 +56,8 @@ export default defineConfig({
             handler: "NetworkFirst",
             options: {
               cacheName: "pages-cache",
-              networkTimeoutSeconds: 5,
+              // Increased from 5s to 30s to handle Render free-tier cold starts
+              networkTimeoutSeconds: 30,
             },
           },
           {
