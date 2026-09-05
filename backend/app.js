@@ -8,7 +8,13 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-const allowedOrigins = (process.env.CLIENT_URL || "").split(",").map((o) => o.trim()).filter(Boolean);
+const allowedOrigins = [
+  // Production Vercel frontend
+  "https://smart-bionote-reader.vercel.app",
+  "https://smart-bionote-reader-git-main-deller-tech.vercel.app",
+  // Any additional origins from environment variable (comma-separated)
+  ...(process.env.CLIENT_URL || "").split(",").map((o) => o.trim()).filter(Boolean),
+];
 
 // ── Security headers (helmet) ─────────────────────────────────────────────────
 app.use(
