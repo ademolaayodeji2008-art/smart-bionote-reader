@@ -4,24 +4,26 @@
  * Tracks the browser's online/offline state and triggers offline progress
  * synchronization when the connection returns.
  *
- * Note: navigator.onLine is a hint, not a guarantee of actual internet access.
- * It reliably reports false when the device has no network interface active,
- * but may report true on a captive-portal or metered connection with no real
- * internet. We use it for the indicator only.
+ * Fix: navigator.onLine can falsely return false in PWA/service-worker
+ * context on page load. We start as "online" and only flip to offline
+ * when the browser fires the "offline" event — which is reliable.
+ * We never trust navigator.onLine=false on initial mount.
  */
 
 import { useState, useEffect } from "react";
 import { syncOfflineProgress } from "../services/syncService.js";
 
 export const useConnectionStatus = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  // Always start as online — don't trust navigator.onLine on mount
+  // because PWA service workers can cause a false offline reading briefly
+  const [isOnline, setIsOnline] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState(null);
 
   useEffect(() => {
+    // Only set offline if navigator explicitly says so after a real event
     const handleOnline = async () => {
       setIsOnline(true);
-      // Auto-sync pending offline progress when connection returns
       setIsSyncing(true);
       try {
         const result = await syncOfflineProgress();

@@ -179,6 +179,18 @@ const StudentSubscription = () => {
         Prices are in Nigerian Naira (₦). Payments are processed securely by Paystack.
         Renewing before expiry extends from your current end date.
       </p>
+
+      {/* Voice tip */}
+      <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center max-w-2xl mx-auto">
+        <p className="text-small font-semibold text-primary mb-1">💡 Get the best Smart Reader experience</p>
+        <p className="text-small text-text-muted">
+          The Smart Reader uses your device's built-in text-to-speech voice to read Biology notes aloud.
+          For more voice options on <strong>Android</strong>, go to{" "}
+          <strong>Settings → General Management → Text-to-speech → Install voice data</strong> and download
+          English (Nigeria) or English (US). On <strong>iPhone</strong>, go to{" "}
+          <strong>Settings → Accessibility → Spoken Content → Voices → English</strong>.
+        </p>
+      </div>
     </div>
   );
 };
