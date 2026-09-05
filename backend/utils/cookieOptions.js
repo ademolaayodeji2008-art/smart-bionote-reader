@@ -13,7 +13,9 @@ const SHORT_SESSION_DURATION = "1d";
 export const getAuthCookieOptions = (rememberMe = false) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  // Cross-origin cookies (Vercel frontend → Render backend) require SameSite=None + Secure.
+  // In development, "lax" works fine since both run on localhost.
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: parseDurationToMs(rememberMe ? process.env.JWT_EXPIRES_IN : SHORT_SESSION_DURATION),
   path: "/",
 });
@@ -21,7 +23,7 @@ export const getAuthCookieOptions = (rememberMe = false) => ({
 export const getClearCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
 });
 
