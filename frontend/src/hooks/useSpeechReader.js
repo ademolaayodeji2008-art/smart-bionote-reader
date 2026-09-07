@@ -32,6 +32,87 @@ const splitIntoSentences = (text) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+/**
+ * Pre-processes Biology note text so the TTS voice reads it naturally.
+ * Converts symbols and abbreviations into spoken equivalents before
+ * passing to SpeechSynthesis.
+ *
+ * Examples:
+ *   /        → " or "
+ *   &        → " and "
+ *   +        → " plus " (or "point" in decimal context)
+ *   →        → " gives " (reaction arrows)
+ *   ▬ ꭝ ∆ ¥ → stripped (bullet/list markers)
+ *   %        → " percent"
+ *   °C       → " degrees Celsius"
+ *   e.g      → "for example"
+ *   i.e      → "that is"
+ *   etc.     → "et cetera"
+ *   pH       → "P H"
+ *   H2O      → "H 2 O"
+ *   CO2      → "C O 2"
+ *   NaCl     → "N a C l"
+ *   HCl/HCL  → "hydrochloric acid"
+ *   S.A      → "surface area"
+ *   Numbers followed by fractions like 1&1/2 → "one and a half"
+ */
+const preprocessForSpeech = (text) => {
+  if (!text) return "";
+
+  return text
+    // Common mixed fractions first (before & and / are replaced)
+    .replace(/1&1\/2/g, "one and a half")
+    .replace(/1\/2/g, "one half")
+    .replace(/1\/4/g, "one quarter")
+    .replace(/3\/4/g, "three quarters")
+    // Chemical formulas
+    .replace(/\bHCl\b/gi, "hydrochloric acid")
+    .replace(/\bH2O\b/g, "H 2 O")
+    .replace(/\bCO2\b/g, "C O 2")
+    .replace(/\bO2\b/g, "O 2")
+    .replace(/\bNaCl\b/g, "sodium chloride")
+    .replace(/\bNaOH\b/g, "sodium hydroxide")
+    .replace(/\bC6H12O6\b/g, "glucose")
+    .replace(/\bATP\b/g, "A T P")
+    .replace(/\bADP\b/g, "A D P")
+    .replace(/\bDNA\b/g, "D N A")
+    .replace(/\bRNA\b/g, "R N A")
+    // Temperature
+    .replace(/°C/g, " degrees Celsius")
+    .replace(/°F/g, " degrees Fahrenheit")
+    // Percentages
+    .replace(/(\d+)%/g, "$1 percent")
+    // pH
+    .replace(/\bpH\b/g, "P H")
+    // Abbreviations
+    .replace(/\bS\.A\b/gi, "surface area")
+    .replace(/\be\.g\.?/gi, "for example,")
+    .replace(/\bi\.e\.?/gi, "that is,")
+    .replace(/\betc\.?/gi, "et cetera")
+    .replace(/\bvs\.?/gi, "versus")
+    .replace(/\bapprox\.?/gi, "approximately")
+    // Reaction arrows → "gives" or "produces"
+    .replace(/→/g, " gives ")
+    .replace(/←/g, " is produced from ")
+    .replace(/⇌/g, " is in equilibrium with ")
+    // Symbols to words
+    .replace(/&/g, " and ")
+    .replace(/\+/g, " plus ")
+    .replace(/\//g, " or ")
+    .replace(/@/g, " at ")
+    .replace(/=/g, " equals ")
+    .replace(/</g, " is less than ")
+    .replace(/>/g, " is greater than ")
+    // Bullet and list markers — strip them, they're not spoken
+    .replace(/[▬ꭝ∆¥►●•◆▸→◉★☆✓✗]/g, " ")
+    .replace(/[+\-–—]{2,}/g, " ")   // repeated dashes/lines used as separators
+    // Remove special Unicode characters used as bullet substitutes
+    .replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, " ")
+    // Clean up excessive whitespace
+    .replace(/\s{2,}/g, " ")
+    .trim();
+};
+
 const DEFAULT_SETTINGS = {
   rate: 1,
   pitch: 1,
@@ -73,7 +154,10 @@ export const useSpeechReader = (content = "") => {
 
   // ── Split content when it changes ─────────────────────────────────────────
   useEffect(() => {
-    sentences.current = splitIntoSentences(content);
+    // Pre-process the raw content to convert symbols to spoken words
+    // before splitting into sentences for the TTS engine
+    const processed = preprocessForSpeech(content);
+    sentences.current = splitIntoSentences(processed);
     currentIdxRef.current = 0;
     setActiveSentenceIdx(-1);
     setActiveWordRange(null);
