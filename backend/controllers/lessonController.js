@@ -129,3 +129,94 @@ export const uploadStepAudio = asyncHandler(async (req, res) => {
   const step = lesson.drawingSteps.id(req.params.stepId);
   sendSuccess(res, { message: "Step audio uploaded successfully.", data: { audio: step?.audio } });
 });
+
+/**
+ * @route   POST /api/lessons/:id/document
+ * @access  Authenticated teacher (must own the lesson, note type only)
+ *
+ * Accepts a .docx or .pdf file.
+ * For .docx: mammoth extracts rich HTML + plain text server-side.
+ * For .pdf: stored on Cloudinary; teacher must also provide plain text for voice.
+ *
+ * contentMode is set to "document" to tell the student reader
+ * to render HTML/PDF instead of the plain text editor content.
+ */
+export const uploadLessonDocument = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError("No document file uploaded.", 400);
+
+  const { processWordDocument } = await import("../services/documentService.js");
+  const { AppError: AE } = await import("../utils/AppError.js");
+  const Lesson = (await import("../models/Lesson.js")).default;
+
+  const lesson = await Lesson.findById(req.params.id);
+  if (!lesson) throw new AppError("Lesson not found.", 404);
+  if (lesson.teacher.toString() !== req.user._id.toString()) {
+    throw new AppError("You do not have permission to upload documents for this lesson.", 403);
+  }
+  if (lesson.type !== "note") {
+    throw new AppError("Document upload is only available for note lessons.", 400);
+  }
+
+  const isPdf = req.file.mimetype === "application/pdf";
+
+  if (isPdf) {
+    // PDF: upload to Cloudinary, store URL, teacher provides voice text separately
+    const cloudinary = (await import("../config/cloudinary.js")).default;
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: `smart-bionote-reader/lessons/${lesson._id}/documents`, resource_type: "raw", format: "pdf" },
+        (err, res) => err ? reject(new AppError("PDF upload failed.", 500)) : resolve(res),
+      );
+      stream.end(req.file.buffer);
+    });
+
+    // Delete old document if it exists
+    if (lesson.document?.publicId) {
+      const { deleteDocumentFromCloudinary } = await import("../services/documentService.js");
+      await deleteDocumentFromCloudinary(lesson.document.publicId);
+    }
+
+    lesson.document = {
+      url: result.secure_url,
+      publicId: result.public_id,
+      type: "pdf",
+      html: null,
+      plainText: lesson.content || "",
+    };
+    lesson.contentMode = "document";
+    await lesson.save();
+
+    return sendSuccess(res, {
+      message: "PDF uploaded. Students will view the PDF directly. Add plain text in the content field for the voice reader.",
+      data: { document: lesson.document, contentMode: lesson.contentMode },
+    });
+  }
+
+  // Word document: extract HTML + plain text with mammoth
+  const { cloudinaryUrl, publicId, html, plainText, wordCount } =
+    await processWordDocument(req.file.buffer, lesson._id.toString());
+
+  // Delete old document if it exists
+  if (lesson.document?.publicId) {
+    const { deleteDocumentFromCloudinary } = await import("../services/documentService.js");
+    await deleteDocumentFromCloudinary(lesson.document.publicId);
+  }
+
+  lesson.document = {
+    url: cloudinaryUrl,
+    publicId,
+    type: "docx",
+    html,
+    plainText,
+  };
+  // Switch to document mode — student viewer will render the extracted HTML
+  lesson.contentMode = "document";
+  // Also store plain text in content field so the voice reader works
+  lesson.content = plainText;
+  await lesson.save();
+
+  sendSuccess(res, {
+    message: `Document processed successfully. ${wordCount} words extracted for the voice reader.`,
+    data: { document: lesson.document, contentMode: lesson.contentMode, wordCount },
+  });
+});

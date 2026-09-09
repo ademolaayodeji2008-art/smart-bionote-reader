@@ -11,6 +11,7 @@ import {
   uploadCoverImage as uploadCoverImageController,
   uploadStepImage as uploadStepImageController,
   uploadStepAudio as uploadStepAudioController,
+  uploadLessonDocument,
 } from "../controllers/lessonController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { requireRole } from "../middleware/roleMiddleware.js";
@@ -20,6 +21,7 @@ import {
   uploadCoverImage,
   uploadStepImage,
   uploadStepAudio,
+  uploadDocument,
   handleUploadError,
 } from "../middleware/upload.js";
 import { uploadLimiter } from "../middleware/rateLimiters.js";
@@ -47,5 +49,14 @@ router.post("/:id/cover-image", requireRole("teacher"), validateObjectId("id"), 
 router.post("/:id/steps/:stepId/image", requireRole("teacher"), validateObjectId("id"), uploadLimiter, uploadStepImage, handleUploadError, uploadStepImageController);
 // Drawing step audio ONLY — normal notes use browser SpeechSynthesis, no teacher audio upload
 router.post("/:id/steps/:stepId/audio", requireRole("teacher"), validateObjectId("id"), uploadLimiter, uploadStepAudio, handleUploadError, uploadStepAudioController);
+
+/**
+ * POST /api/lessons/:id/document
+ * Upload a Word (.docx) or PDF document for a note lesson.
+ * mammoth extracts HTML + plain text from .docx server-side.
+ * PDF is stored on Cloudinary and displayed via iframe.
+ * Teacher chooses this instead of (or to replace) manually typed content.
+ */
+router.post("/:id/document", requireRole("teacher"), validateObjectId("id"), uploadLimiter, uploadDocument, handleUploadError, uploadLessonDocument);
 
 export default router;

@@ -254,21 +254,47 @@ const SmartReader = () => {
           </label>
         </div>
 
-        {/* Lesson text — wrapped in ProtectedContent for watermark + copy prevention */}
-        <ProtectedContent email={user?.email}>
-          <article className="prose-custom text-body leading-8 text-text-body">
-            {lesson.content ? (
-              <RenderedContent
-                sentences={reader.sentences}
-                activeSentenceIdx={reader.activeSentenceIdx}
-                activeWordRange={reader.activeWordRange}
-                sentenceRefs={sentenceRefs}
+        {/* Lesson content — switches between document HTML, PDF embed, or plain text */}
+        {lesson.contentMode === "document" && lesson.document ? (
+          lesson.document.type === "pdf" ? (
+            /* PDF viewer */
+            <ProtectedContent email={user?.email}>
+              <div className="mb-6 rounded-xl overflow-hidden border border-border">
+                <iframe
+                  src={lesson.document.url}
+                  title={lesson.title}
+                  className="w-full"
+                  style={{ height: "75vh", minHeight: "500px" }}
+                  aria-label="Lesson PDF document"
+                />
+              </div>
+            </ProtectedContent>
+          ) : (
+            /* Word document — render extracted HTML */
+            <ProtectedContent email={user?.email}>
+              <article
+                className="prose-custom text-body leading-8 text-text-body doc-content"
+                dangerouslySetInnerHTML={{ __html: lesson.document.html || "" }}
               />
-            ) : (
-              <p className="text-text-muted italic">No content available.</p>
-            )}
-          </article>
-        </ProtectedContent>
+            </ProtectedContent>
+          )
+        ) : (
+          /* Plain text mode — highlighted by TTS */
+          <ProtectedContent email={user?.email}>
+            <article className="prose-custom text-body leading-8 text-text-body">
+              {lesson.content ? (
+                <RenderedContent
+                  sentences={reader.sentences}
+                  activeSentenceIdx={reader.activeSentenceIdx}
+                  activeWordRange={reader.activeWordRange}
+                  sentenceRefs={sentenceRefs}
+                />
+              ) : (
+                <p className="text-text-muted italic">No content available.</p>
+              )}
+            </article>
+          </ProtectedContent>
+        )}
 
         {/* Mark complete */}
         <div className="mt-10 flex justify-center">
@@ -359,6 +385,13 @@ const SmartReader = () => {
                   <p className="text-caption mb-1">Voice</p>
                   {!reader.voicesReady ? (
                     <p className="text-small text-text-muted">Loading voices…</p>
+                  ) : reader.voices.length === 0 ? (
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
+                      <p className="text-small text-accent font-semibold">No voices found</p>
+                      <p className="text-small text-text-muted mt-1">
+                        Your browser has no TTS voices installed. On Android, go to <strong>Settings → General Management → Text-to-speech → Install voice data</strong>. On iPhone, go to <strong>Settings → Accessibility → Spoken Content → Voices</strong>.
+                      </p>
+                    </div>
                   ) : (
                     <div className="max-h-32 overflow-y-auto rounded-xl border border-border bg-surface">
                       {reader.voices.map((v) => (

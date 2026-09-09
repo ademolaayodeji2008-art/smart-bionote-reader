@@ -10,6 +10,7 @@ import Textarea from "../../components/ui/Textarea.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
+import ContentModeSelector from "../../components/ui/ContentModeSelector.jsx";
 import { useToast } from "../../hooks/useToast.js";
 import { createLesson, publishLesson } from "../../services/lessonService.js";
 import { getSubjects } from "../../services/subjectService.js";
@@ -180,6 +181,7 @@ const TeacherCreateLesson = () => {
       description: "",
       type: "note",
       subjectId: "",
+      contentMode: "text",
       content: "",
       drawingSteps: [{ title: "", description: "" }],
     },
@@ -187,6 +189,7 @@ const TeacherCreateLesson = () => {
 
   const { fields, append, remove, swap } = useFieldArray({ control, name: "drawingSteps" });
   const lessonType = watch("type");
+  const contentMode = watch("contentMode");
 
   useEffect(() => {
     const fetch = async () => {
@@ -254,9 +257,11 @@ const TeacherCreateLesson = () => {
       description: values.description || undefined,
       type: values.type,
       subjectId: values.subjectId,
+      contentMode: values.contentMode || "text",
     };
     if (values.type === "note") {
-      payload.content = values.content;
+      // If document mode, content can be empty at creation — teacher uploads doc after saving
+      payload.content = values.contentMode === "document" ? " " : values.content;
     } else {
       payload.drawingSteps = values.drawingSteps.map((step, idx) => ({
         stepNumber: idx + 1,
@@ -386,19 +391,44 @@ const TeacherCreateLesson = () => {
 
             {lessonType === "note" && (
               <>
-                <NoteTTSNotice />
-                <Textarea
-                  id="content"
-                  label="Lesson content"
-                  placeholder="Write your Biology lesson here. Use headings, paragraphs, and lists to structure it clearly..."
-                  rows={14}
-                  required
-                  error={errors.content?.message}
-                  {...register("content", {
-                    required: "Note content is required.",
-                    maxLength: { value: 100000, message: "Content is too long." },
-                  })}
+                {/* Content mode selector */}
+                <ContentModeSelector
+                  value={contentMode}
+                  onChange={(mode) => setValue("contentMode", mode)}
                 />
+
+                {contentMode === "text" && (
+                  <>
+                    <NoteTTSNotice />
+                    <Textarea
+                      id="content"
+                      label="Lesson content"
+                      placeholder="Write your Biology lesson here. Use headings, paragraphs, and lists to structure it clearly..."
+                      rows={14}
+                      required
+                      error={errors.content?.message}
+                      {...register("content", {
+                        required: "Note content is required.",
+                        maxLength: { value: 100000, message: "Content is too long." },
+                      })}
+                    />
+                  </>
+                )}
+
+                {contentMode === "document" && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mx-auto">
+                      <Info className="h-6 w-6" aria-hidden="true" />
+                    </div>
+                    <p className="text-body font-semibold text-text-strong">Save first, then upload your document</p>
+                    <p className="text-small text-text-muted">
+                      Click <strong>Save as Draft</strong> below to create the lesson. Once saved, you'll be taken to the lesson editor where you can upload your Word (.docx) or PDF document.
+                    </p>
+                    <p className="text-caption text-text-muted">
+                      The document upload requires a lesson ID which is generated when you save.
+                    </p>
+                  </div>
+                )}
               </>
             )}
 

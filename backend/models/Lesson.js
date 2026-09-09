@@ -189,12 +189,43 @@ const lessonSchema = new mongoose.Schema(
 
     // ── NOTE content ───────────────────────────────────────────────────────
     // For type = "note" only.
-    // Structured as an array of content blocks so the future SpeechSynthesis
-    // reader can process them in sequence.
     // DO NOT add a teacher audio field here — normal notes use browser TTS.
     content: {
       type: String,
       trim: true,
+      default: null,
+    },
+
+    /**
+     * contentMode controls which content the student sees:
+     *   "text"     — teacher typed/pasted content directly (default)
+     *   "document" — teacher uploaded a Word/PDF document
+     *
+     * When "document": document.html is rendered visually,
+     *                  content (plain text) is used for the voice reader.
+     * When "text":     content is both rendered and read by the voice.
+     */
+    contentMode: {
+      type: String,
+      enum: ["text", "document"],
+      default: "text",
+    },
+
+    /**
+     * Uploaded document metadata (Word .docx or PDF).
+     * Only populated when contentMode === "document".
+     * Binary data is NEVER stored here — only Cloudinary URLs + extracted text.
+     */
+    document: {
+      // Cloudinary URL to download/view the original file
+      url: { type: String, default: null },
+      publicId: { type: String, default: null },
+      // "docx" or "pdf"
+      type: { type: String, enum: ["docx", "pdf"], default: null },
+      // Extracted HTML from mammoth (.docx only) — rendered to the student
+      html: { type: String, default: null },
+      // Extracted plain text — fed to the SpeechSynthesis voice reader
+      plainText: { type: String, default: null },
       default: null,
     },
 

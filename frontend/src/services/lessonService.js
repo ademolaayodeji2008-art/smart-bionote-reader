@@ -115,3 +115,20 @@ export const getPublishedLessons = async (params = {}) => {
   const response = await api.get("/lessons", { params });
   return response.data;
 };
+
+/**
+ * Uploads a Word (.docx) or PDF document for a note lesson.
+ * The backend uses mammoth to extract HTML + plain text from .docx.
+ * @param {string} lessonId
+ * @param {File} file — .docx or .pdf
+ * @param {Function} onUploadProgress — optional progress callback
+ */
+export const uploadLessonDocument = async (lessonId, file, onUploadProgress) => {
+  const formData = new FormData();
+  formData.append("document", file);
+  const response = await api.post(`/lessons/${lessonId}/document`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress,
+  });
+  return response.data;
+};

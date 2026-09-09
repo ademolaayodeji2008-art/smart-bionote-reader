@@ -216,7 +216,7 @@ export const updateLesson = async (lessonId, teacherId, data) => {
   if (data.classId) await validateClassOwnership(data.classId, teacherId);
 
   // Explicit whitelist — never spread data directly
-  const ALLOWED = ["title", "description", "visibility"];
+  const ALLOWED = ["title", "description", "visibility", "contentMode"];
   for (const field of ALLOWED) {
     if (data[field] !== undefined) lesson[field] = data[field];
   }

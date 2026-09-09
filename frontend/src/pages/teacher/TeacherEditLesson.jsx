@@ -10,6 +10,8 @@ import Button from "../../components/ui/Button.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import Modal from "../../components/ui/Modal.jsx";
+import ContentModeSelector from "../../components/ui/ContentModeSelector.jsx";
+import DocumentUploader from "../../components/ui/DocumentUploader.jsx";
 import { useToast } from "../../hooks/useToast.js";
 import {
   getLesson,
@@ -60,6 +62,7 @@ const TeacherEditLesson = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingSteps, setUploadingSteps] = useState({});
   const [confirmModal, setConfirmModal] = useState({ open: false, action: null });
+  const [contentMode, setContentMode] = useState("text");
 
   const {
     register,
@@ -77,6 +80,7 @@ const TeacherEditLesson = () => {
         const res = await getLesson(id);
         const l = res.data.lesson;
         setLesson(l);
+        setContentMode(l.contentMode || "text");
         reset({
           title: l.title ?? "",
           description: l.description ?? "",
@@ -104,6 +108,7 @@ const TeacherEditLesson = () => {
       const payload = {
         title: values.title,
         description: values.description || null,
+        contentMode,
       };
       if (lesson.type === "note") {
         payload.content = values.content;
@@ -307,27 +312,79 @@ const TeacherEditLesson = () => {
             })}
           />
 
-          {/* Note content */}
+          {/* Note content — dual mode: type OR upload document */}
           {lesson.type === "note" && (
             <>
-              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p className="text-small text-primary">
-                  Smart Bionote Reader reads this content aloud to students automatically using a built-in reading voice. No audio upload needed.
-                </p>
-              </div>
-              <Textarea
-                id="content"
-                label="Lesson content"
-                rows={16}
-                required
-                error={errors.content?.message}
-                disabled={isArchived}
-                {...register("content", {
-                  required: "Note content is required.",
-                  maxLength: { value: 100000, message: "Content is too long." },
-                })}
-              />
+              {/* Content mode selector */}
+              {!isArchived && (
+                <ContentModeSelector
+                  value={contentMode}
+                  onChange={(mode) => {
+                    setContentMode(mode);
+                  }}
+                />
+              )}
+
+              {/* Type mode — plain text editor */}
+              {contentMode === "text" && (
+                <>
+                  <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <p className="text-small text-primary">
+                      Smart Bionote Reader reads this content aloud to students automatically using a built-in reading voice. No audio upload needed.
+                    </p>
+                  </div>
+                  <Textarea
+                    id="content"
+                    label="Lesson content"
+                    rows={16}
+                    required
+                    error={errors.content?.message}
+                    disabled={isArchived}
+                    {...register("content", {
+                      required: contentMode === "text" ? "Note content is required." : false,
+                      maxLength: { value: 100000, message: "Content is too long." },
+                    })}
+                  />
+                </>
+              )}
+
+              {/* Document mode — upload Word / PDF */}
+              {contentMode === "document" && (
+                <>
+                  <DocumentUploader
+                    lessonId={id}
+                    currentDocument={lesson.document}
+                    disabled={isArchived}
+                    onSuccess={(data) => {
+                      setLesson((prev) => ({
+                        ...prev,
+                        document: data.document,
+                        contentMode: data.contentMode,
+                        content: data.document?.plainText || prev.content,
+                      }));
+                      toast.success("Document uploaded and processed.");
+                    }}
+                  />
+
+                  {/* Plain text fallback for PDF or voice override */}
+                  <div>
+                    <Textarea
+                      id="content"
+                      label={lesson.document?.type === "pdf"
+                        ? "Plain text for voice reader (required for PDF)"
+                        : "Plain text for voice reader (auto-extracted from Word doc — you can edit)"}
+                      rows={8}
+                      error={errors.content?.message}
+                      disabled={isArchived}
+                      {...register("content")}
+                    />
+                    <p className="text-caption mt-1 text-text-muted">
+                      This text is what the Smart Reader speaks aloud. It was extracted from your document automatically.
+                    </p>
+                  </div>
+                </>
+              )}
             </>
           )}
 
