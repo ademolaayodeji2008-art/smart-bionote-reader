@@ -93,6 +93,8 @@ const preprocessForSpeech = (text) => {
     .replace(/\bapprox\.?/gi, "approximately")
     // Reaction arrows → "gives" or "produces"
     .replace(/→/g, " gives ")
+    .replace(/->/g, " to ")
+    .replace(/<-/g, " from ")
     .replace(/←/g, " is produced from ")
     .replace(/⇌/g, " is in equilibrium with ")
     // Symbols to words
