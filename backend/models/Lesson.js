@@ -226,7 +226,6 @@ const lessonSchema = new mongoose.Schema(
       html: { type: String, default: null },
       // Extracted plain text — fed to the SpeechSynthesis voice reader
       plainText: { type: String, default: null },
-      default: null,
     },
 
     // ── DRAWING content ────────────────────────────────────────────────────
