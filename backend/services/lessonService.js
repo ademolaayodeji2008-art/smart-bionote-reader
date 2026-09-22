@@ -82,13 +82,13 @@ const tryDeleteCloudinaryAsset = async (publicId, resourceType = "image") => {
  * Teacher identity comes from the authenticated session — never from req.body.
  */
 export const createLesson = async (teacherId, data) => {
-  const { title, description, type, subjectId, classId, content, drawingSteps } = data;
+  const { title, description, type, subjectId, classId, content, drawingSteps, contentMode = "text" } = data;
 
   await validateSubject(subjectId);
   if (classId) await validateClassOwnership(classId, teacherId);
 
   // Validate type-specific content
-  if (type === "note" && !content?.trim()) {
+  if (type === "note" && contentMode !== "document" && !content?.trim()) {
     throw new AppError("Note lessons must have content.", 400);
   }
   if (type === "drawing" && (!drawingSteps || drawingSteps.length === 0)) {
@@ -107,6 +107,7 @@ export const createLesson = async (teacherId, data) => {
     class: classId || null,
     status: "draft",
     visibility: "private",
+    contentMode,
   };
 
   if (type === "note") {
@@ -263,7 +264,7 @@ export const publishLesson = async (lessonId, teacherId) => {
   // Content validation before publish
   if (!lesson.title?.trim()) throw new AppError("A lesson must have a title before publishing.", 400);
   if (!lesson.description?.trim()) throw new AppError("A lesson must have a description before publishing.", 400);
-  if (lesson.type === "note" && !lesson.content?.trim()) {
+  if (lesson.type === "note" && lesson.contentMode !== "document" && !lesson.content?.trim()) {
     throw new AppError("Note lessons must have content before publishing.", 400);
   }
   if (lesson.type === "drawing" && lesson.drawingSteps.length === 0) {
