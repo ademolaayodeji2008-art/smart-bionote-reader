@@ -417,17 +417,26 @@ const TeacherCreateLesson = () => {
                 )}
 
                 {contentMode === "document" && (
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mx-auto">
-                      <Info className="h-6 w-6" aria-hidden="true" />
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                      <div>
+                        <p className="text-body font-semibold text-text-strong">Save first, then upload your document</p>
+                        <p className="text-small mt-1 text-text-muted">
+                          A lesson ID is required before uploading a document. Save as draft now — you'll be redirected to the lesson editor where you can upload your Word (.docx) or PDF file immediately.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-body font-semibold text-text-strong">Save first, then upload your document</p>
-                    <p className="text-small text-text-muted">
-                      Click <strong>Save as Draft</strong> below to create the lesson. Once saved, you'll be taken to the lesson editor where you can upload your Word (.docx) or PDF document.
-                    </p>
-                    <p className="text-caption text-text-muted">
-                      The document upload requires a lesson ID which is generated when you save.
-                    </p>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      className="w-full"
+                      loading={isSaving}
+                      disabled={isSaving || isPublishing}
+                      onClick={handleSubmit(saveAsDraft)}
+                    >
+                      Save as Draft — Then Upload Document
+                    </Button>
                   </div>
                 )}
               </>
@@ -469,9 +478,11 @@ const TeacherCreateLesson = () => {
               <Button type="button" variant="ghost" onClick={() => goToStep(1)}>
                 Back
               </Button>
-              <Button type="button" variant="primary" onClick={() => goToStep(3)}>
-                Next: Review
-              </Button>
+              {(lessonType !== "note" || contentMode !== "document") && (
+                <Button type="button" variant="primary" onClick={() => goToStep(3)}>
+                  Next: Review
+                </Button>
+              )}
             </div>
           </div>
         )}
