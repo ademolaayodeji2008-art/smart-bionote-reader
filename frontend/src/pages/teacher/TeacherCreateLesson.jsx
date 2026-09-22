@@ -174,6 +174,7 @@ const TeacherCreateLesson = () => {
     control,
     getValues,
     trigger,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
