@@ -54,6 +54,7 @@ export const processWordDocument = async (buffer, lessonId) => {
     folder: `smart-bionote-reader/lessons/${lessonId}/documents`,
     resource_type: "raw",
     format: "docx",
+    access_mode: "public",
   });
 
   // Extract rich HTML from the .docx

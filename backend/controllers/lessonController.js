@@ -164,7 +164,12 @@ export const uploadLessonDocument = asyncHandler(async (req, res) => {
     const cloudinary = (await import("../config/cloudinary.js")).default;
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: `smart-bionote-reader/lessons/${lesson._id}/documents`, resource_type: "raw", format: "pdf" },
+        {
+          folder: `smart-bionote-reader/lessons/${lesson._id}/documents`,
+          resource_type: "raw",
+          format: "pdf",
+          access_mode: "public",   // ensure the URL is publicly accessible
+        },
         (err, res) => err ? reject(new AppError("PDF upload failed.", 500)) : resolve(res),
       );
       stream.end(req.file.buffer);

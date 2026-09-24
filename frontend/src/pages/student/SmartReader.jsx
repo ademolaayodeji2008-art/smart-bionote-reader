@@ -257,16 +257,32 @@ const SmartReader = () => {
         {/* Lesson content — switches between document HTML, PDF embed, or plain text */}
         {lesson.contentMode === "document" && lesson.document ? (
           lesson.document.type === "pdf" ? (
-            /* PDF viewer */
+            /* PDF viewer — use Google Docs viewer to avoid cross-origin/auth issues */
             <ProtectedContent email={user?.email}>
               <div className="mb-6 rounded-xl overflow-hidden border border-border">
                 <iframe
-                  src={lesson.document.url}
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.document.url)}&embedded=true`}
                   title={lesson.title}
                   className="w-full"
-                  style={{ height: "75vh", minHeight: "500px" }}
+                  style={{ height: "80vh", minHeight: "600px" }}
                   aria-label="Lesson PDF document"
+                  onError={(e) => {
+                    // Fallback: direct link if Google viewer fails
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
                 />
+                <div style={{ display: "none" }} className="p-6 text-center">
+                  <p className="text-body text-text-muted mb-4">Unable to display PDF in browser.</p>
+                  <a
+                    href={lesson.document.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white"
+                  >
+                    Open PDF in new tab
+                  </a>
+                </div>
               </div>
             </ProtectedContent>
           ) : (
