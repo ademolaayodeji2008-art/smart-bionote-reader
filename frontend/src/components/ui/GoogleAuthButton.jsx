@@ -44,10 +44,15 @@ const GoogleAuthButton = ({ onCredential, text = "continue_with" }) => {
       .then(() => {
         if (cancelled || !containerRef.current) return;
 
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response) => onCredential(response.credential),
-        });
+        // Only initialize once — calling initialize() multiple times causes
+        // the GSI_LOGGER warning in React Strict Mode and on re-renders
+        if (!window.__gsiInitialized) {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response) => onCredential(response.credential),
+          });
+          window.__gsiInitialized = true;
+        }
 
         window.google.accounts.id.renderButton(containerRef.current, {
           type: "standard",

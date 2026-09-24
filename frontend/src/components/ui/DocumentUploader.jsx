@@ -94,14 +94,18 @@ const DocumentUploader = ({ lessonId, currentDocument, onSuccess, disabled = fal
                 : "Students view the PDF directly. Add plain text below for the voice reader."}
             </p>
           </div>
-          <a
-            href={currentDocument.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-semibold text-secondary hover:underline"
-          >
-            View
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={currentDocument.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-secondary hover:underline"
+            >
+              View
+            </a>
+            <span className="text-border">|</span>
+            <span className="text-xs text-text-muted">Upload new file to replace</span>
+          </div>
         </div>
       )}
 
